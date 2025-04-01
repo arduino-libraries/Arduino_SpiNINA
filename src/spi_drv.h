@@ -31,7 +31,6 @@
 class SpiDrv
 {
 private:
-	//static bool waitSlaveReady();
 	static void waitForSlaveSign();
 	static void getParam(uint8_t* param);
 public:
@@ -51,8 +50,6 @@ public:
 
     static void waitForSlaveReady(bool const feed_watchdog = false);
 
-    //static int waitSpiChar(char waitChar, char* readChar);
-
     static int waitSpiChar(unsigned char waitChar);
 
     static int readAndCheckChar(char checkChar, char* readChar);
@@ -66,11 +63,7 @@ public:
     static int waitResponseData8(uint8_t cmd, uint8_t* param, uint8_t* param_len);
 
     static int waitResponseData16(uint8_t cmd, uint8_t* param, uint16_t* param_len);
-/*
-    static int waitResponse(uint8_t cmd, tParam* params, uint8_t* numParamRead, uint8_t maxNumParams);
 
-    static int waitResponse(uint8_t cmd, uint8_t numParam, uint8_t* param, uint16_t* param_len);
-*/
     static int waitResponse(uint8_t cmd, uint8_t* numParamRead, uint8_t** params, uint8_t maxNumParams);
 
     static void sendParam(const uint8_t* param, uint8_t param_len, uint8_t lastParam = NO_LAST_PARAM);

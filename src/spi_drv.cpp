@@ -12,7 +12,6 @@
 #include <SPI.h>
 #include "spi_drv.h"
 #include "pins_arduino.h"
-//#include "WiFi.h"
 
 #ifdef ARDUINO_SAMD_MKRVIDOR4000
 
@@ -36,9 +35,7 @@
 #endif
 
 // #define _DEBUG_
-extern "C" {
 #include "utility/debug.h"
-}
 
 static uint8_t SLAVESELECT = 10; // ss
 static uint8_t SLAVEREADY  = 7;  // handshake pin
@@ -57,8 +54,6 @@ static bool inverted_reset = false;
 #endif
 
 bool SpiDrv::initialized = false;
-
-//extern WiFiClass WiFi;
 
 void SpiDrv::begin(bool force)
 {
@@ -255,32 +250,6 @@ int SpiDrv::waitResponseCmd(uint8_t cmd, uint8_t numParam, uint8_t* param, uint8
 
     return 1;
 }
-/*
-int SpiDrv::waitResponse(uint8_t cmd, uint8_t numParam, uint8_t* param, uint16_t* param_len)
-{
-    char _data = 0;
-    int i =0, ii = 0;
-
-    IF_CHECK_START_CMD(_data)
-    {
-        CHECK_DATA(cmd | REPLY_FLAG, _data){};
-
-        CHECK_DATA(numParam, _data);
-        {
-            readParamLen16(param_len);
-            for (ii=0; ii<(*param_len); ++ii)
-            {
-                // Get Params data
-                param[ii] = spiTransfer(DUMMY_DATA);
-            }
-        }
-
-        readAndCheckChar(END_CMD, &_data);
-    }
-
-    return 1;
-}
-*/
 
 int SpiDrv::waitResponseData16(uint8_t cmd, uint8_t* param, uint16_t* param_len)
 {
@@ -372,47 +341,6 @@ int SpiDrv::waitResponseParams(uint8_t cmd, uint8_t numParam, tParam* params)
     }
     return 1;
 }
-
-/*
-int SpiDrv::waitResponse(uint8_t cmd, tParam* params, uint8_t* numParamRead, uint8_t maxNumParams)
-{
-    char _data = 0;
-    int i =0, ii = 0;
-
-    IF_CHECK_START_CMD(_data)
-    {
-        CHECK_DATA(cmd | REPLY_FLAG, _data){};
-
-        uint8_t numParam = readChar();
-
-        if (numParam > maxNumParams)
-        {
-            numParam = maxNumParams;
-        }
-        *numParamRead = numParam;
-        if (numParam != 0)
-        {
-            for (i=0; i<numParam; ++i)
-            {
-                params[i].paramLen = readParamLen8();
-
-                for (ii=0; ii<params[i].paramLen; ++ii)
-                {
-                    // Get Params data
-                    params[i].param[ii] = spiTransfer(DUMMY_DATA);
-                }
-            }
-        } else
-        {
-            WARN("Error numParams == 0");
-            Serial.println(cmd, 16);
-            return 0;
-        }
-        readAndCheckChar(END_CMD, &_data);
-    }
-    return 1;
-}
-*/
 
 #define SPI_RESPONSE_MAX_LENGTH 32
 #define SPI_MAX_RESPONSE_NUMBER 10

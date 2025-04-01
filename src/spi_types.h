@@ -11,7 +11,6 @@
 #pragma once
 
 #include <inttypes.h>
-//#include "utility/wl_definitions.h"
 
 #define CMD_FLAG        0
 #define REPLY_FLAG      1<<7
@@ -22,7 +21,6 @@
 
 #define TIMEOUT_CHAR    1000
 
-//#define	MAX_SOCK_NUM		4	/**< Maximum number of socket  */
 #define NO_SOCKET_AVAIL     255
 
 #define START_CMD   0xE0
@@ -80,7 +78,6 @@ typedef struct  __attribute__((__packed__))
 {
 	unsigned char	cmd;
 	unsigned char	tcmd;
-	//unsigned char	totLen;
 	unsigned char	nParam;
 }tSpiHdr;
 
