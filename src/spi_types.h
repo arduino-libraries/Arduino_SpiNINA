@@ -21,8 +21,6 @@
 
 #define TIMEOUT_CHAR 1000
 
-#define NO_SOCKET_AVAIL 255
-
 #define START_CMD 0xE0
 #define END_CMD 0xEE
 #define ERR_CMD 0xEF
