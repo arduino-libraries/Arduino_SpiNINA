@@ -1,5 +1,5 @@
 /*
-  This file is part of the Arduino_SpiDrvNINA library.
+  This file is part of the Arduino_SpiNINA library.
 
   Copyright (c) 2025 Arduino SA
 
