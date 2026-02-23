@@ -53,6 +53,7 @@ jobs:
         - ~/Arduino/libraries/WiFiNINA/examples/WiFiWebClient
         - ~/Arduino/libraries/WiFiNINA/examples/WiFiWebClientRepeating
         - ~/Arduino/libraries/WiFiNINA/examples/WiFiWebServer
+        - examples/StartDriver
       SKETCHES_REPORTS_PATH: sketches-reports
     strategy:
       fail-fast: false
