@@ -52,11 +52,18 @@ static bool inverted_reset = false;
 #ifndef NINA_GPIOIRQ
 #define NINA_GPIOIRQ NINA_GPIO0
 #endif
+namespace SpiDrv {
+static void waitForSlaveSign();
+static void getParam(uint8_t* param);
 
-bool SpiDrv::initialized = false;
+static volatile bool _initialized = false;
 
-void SpiDrv::begin(bool force) {
-  if (initialized && !force) {
+bool initialized() {
+  return _initialized;
+}
+
+void begin(bool force) {
+  if (_initialized && !force) {
     return;
   }
 
@@ -106,20 +113,20 @@ void SpiDrv::begin(bool force) {
   INIT_TRIGGER()
 #endif
 
-  initialized = true;
+  _initialized = true;
 }
 
-void SpiDrv::end() {
+void end() {
   digitalWrite(SLAVERESET, inverted_reset ? HIGH : LOW);
 
   pinMode(SLAVESELECT, INPUT);
 
   SPIWIFI.end();
 
-  initialized = false;
+  _initialized = false;
 }
 
-void SpiDrv::spiSlaveSelect() {
+void spiSlaveSelect() {
   SPIWIFI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
   digitalWrite(SLAVESELECT, LOW);
 
@@ -129,20 +136,20 @@ void SpiDrv::spiSlaveSelect() {
 }
 
 
-void SpiDrv::spiSlaveDeselect() {
+void spiSlaveDeselect() {
   digitalWrite(SLAVESELECT, HIGH);
   SPIWIFI.endTransaction();
 }
 
 
-char SpiDrv::spiTransfer(volatile char data) {
+char spiTransfer(volatile char data) {
   char result = SPIWIFI.transfer(data);
   DELAY_TRANSFER();
 
   return result;  // return the received byte
 }
 
-int SpiDrv::waitSpiChar(unsigned char waitChar) {
+int waitSpiChar(unsigned char waitChar) {
   int timeout = TIMEOUT_CHAR;
   unsigned char _readChar = 0;
   do {
@@ -155,13 +162,13 @@ int SpiDrv::waitSpiChar(unsigned char waitChar) {
   return (_readChar == waitChar);
 }
 
-int SpiDrv::readAndCheckChar(char checkChar, char* readChar) {
+int readAndCheckChar(char checkChar, char* readChar) {
   getParam((uint8_t*)readChar);
 
   return (*readChar == checkChar);
 }
 
-char SpiDrv::readChar() {
+char readChar() {
   uint8_t readChar = 0;
   getParam(&readChar);
   return readChar;
@@ -191,11 +198,11 @@ char SpiDrv::readChar() {
 #define waitSlaveSignalL() \
   while (digitalRead(SLAVEREADY) != LOW) {}
 
-void SpiDrv::waitForSlaveSign() {
+void waitForSlaveSign() {
   while (!waitSlaveSign());
 }
 
-void SpiDrv::waitForSlaveReady(bool const feed_watchdog) {
+void waitForSlaveReady(bool const feed_watchdog) {
   unsigned long const start = millis();
   while (!waitSlaveReady()) {
     if (feed_watchdog) {
@@ -207,13 +214,13 @@ void SpiDrv::waitForSlaveReady(bool const feed_watchdog) {
   }
 }
 
-void SpiDrv::getParam(uint8_t* param) {
+void getParam(uint8_t* param) {
   // Get Params data
   *param = spiTransfer(DUMMY_DATA);
   DELAY_TRANSFER();
 }
 
-int SpiDrv::waitResponseCmd(uint8_t cmd, uint8_t numParam, uint8_t* param, uint8_t* param_len) {
+int waitResponseCmd(uint8_t cmd, uint8_t numParam, uint8_t* param, uint8_t* param_len) {
   char _data = 0;
   int ii = 0;
 
@@ -235,7 +242,7 @@ int SpiDrv::waitResponseCmd(uint8_t cmd, uint8_t numParam, uint8_t* param, uint8
   return 1;
 }
 
-int SpiDrv::waitResponseData16(uint8_t cmd, uint8_t* param, uint16_t* param_len) {
+int waitResponseData16(uint8_t cmd, uint8_t* param, uint16_t* param_len) {
   char _data = 0;
   uint16_t ii = 0;
 
@@ -257,7 +264,7 @@ int SpiDrv::waitResponseData16(uint8_t cmd, uint8_t* param, uint16_t* param_len)
   return 1;
 }
 
-int SpiDrv::waitResponseData8(uint8_t cmd, uint8_t* param, uint8_t* param_len) {
+int waitResponseData8(uint8_t cmd, uint8_t* param, uint8_t* param_len) {
   char _data = 0;
   int ii = 0;
 
@@ -279,7 +286,7 @@ int SpiDrv::waitResponseData8(uint8_t cmd, uint8_t* param, uint8_t* param_len) {
   return 1;
 }
 
-int SpiDrv::waitResponseParams(uint8_t cmd, uint8_t numParam, tParam* params) {
+int waitResponseParams(uint8_t cmd, uint8_t numParam, tParam* params) {
   char _data = 0;
   int i = 0, ii = 0;
 
@@ -314,7 +321,7 @@ int SpiDrv::waitResponseParams(uint8_t cmd, uint8_t numParam, tParam* params) {
 #define SPI_RESPONSE_MAX_LENGTH 32
 #define SPI_MAX_RESPONSE_NUMBER 10
 
-int SpiDrv::waitResponse(uint8_t cmd, uint8_t* numParamRead, uint8_t** params, uint8_t maxNumParams) {
+int waitResponse(uint8_t cmd, uint8_t* numParamRead, uint8_t** params, uint8_t maxNumParams) {
   char _data = 0;
   int i = 0, ii = 0;
 
@@ -352,7 +359,7 @@ int SpiDrv::waitResponse(uint8_t cmd, uint8_t* numParamRead, uint8_t** params, u
   return 1;
 }
 
-void SpiDrv::sendParamNoLen(const uint8_t* param, size_t param_len, uint8_t lastParam) {
+void sendParamNoLen(const uint8_t* param, size_t param_len, uint8_t lastParam) {
   size_t i = 0;
   // Send SPI paramLen
   sendParamLen8(0);
@@ -367,7 +374,7 @@ void SpiDrv::sendParamNoLen(const uint8_t* param, size_t param_len, uint8_t last
     spiTransfer(END_CMD);
 }
 
-void SpiDrv::sendParam(const uint8_t* param, uint8_t param_len, uint8_t lastParam) {
+void sendParam(const uint8_t* param, uint8_t param_len, uint8_t lastParam) {
   int i = 0;
   // Send SPI paramLen
   sendParamLen8(param_len);
@@ -382,18 +389,18 @@ void SpiDrv::sendParam(const uint8_t* param, uint8_t param_len, uint8_t lastPara
     spiTransfer(END_CMD);
 }
 
-void SpiDrv::sendParamLen8(uint8_t param_len) {
+void sendParamLen8(uint8_t param_len) {
   // Send SPI paramLen
   spiTransfer(param_len);
 }
 
-void SpiDrv::sendParamLen16(uint16_t param_len) {
+void sendParamLen16(uint16_t param_len) {
   // Send SPI paramLen
   spiTransfer((uint8_t)((param_len & 0xff00) >> 8));
   spiTransfer((uint8_t)(param_len & 0xff));
 }
 
-uint8_t SpiDrv::readParamLen8(uint8_t* param_len) {
+uint8_t readParamLen8(uint8_t* param_len) {
   uint8_t _param_len = spiTransfer(DUMMY_DATA);
   if (param_len != NULL) {
     *param_len = _param_len;
@@ -401,7 +408,7 @@ uint8_t SpiDrv::readParamLen8(uint8_t* param_len) {
   return _param_len;
 }
 
-uint16_t SpiDrv::readParamLen16(uint16_t* param_len) {
+uint16_t readParamLen16(uint16_t* param_len) {
   uint16_t _param_len = spiTransfer(DUMMY_DATA) << 8 | (spiTransfer(DUMMY_DATA) & 0xff);
   if (param_len != NULL) {
     *param_len = _param_len;
@@ -410,7 +417,7 @@ uint16_t SpiDrv::readParamLen16(uint16_t* param_len) {
 }
 
 
-void SpiDrv::sendBuffer(const uint8_t* param, uint16_t param_len, uint8_t lastParam) {
+void sendBuffer(const uint8_t* param, uint16_t param_len, uint8_t lastParam) {
   uint16_t i = 0;
 
   // Send SPI paramLen
@@ -427,7 +434,7 @@ void SpiDrv::sendBuffer(const uint8_t* param, uint16_t param_len, uint8_t lastPa
 }
 
 
-void SpiDrv::sendParam(uint16_t param, uint8_t lastParam) {
+void sendParam(uint16_t param, uint8_t lastParam) {
   // Send SPI paramLen
   sendParamLen8(2);
 
@@ -446,7 +453,7 @@ void SpiDrv::sendParam(uint16_t param, uint8_t lastParam) {
 /*|   8 bit   | 1bit | 7bit |  8bit   |  8bit   |   8bit    | nbytes | .. |   8bit  | */
 /*|___________|______|______|_________|_________|___________|________|____|_________| */
 
-void SpiDrv::sendCmd(uint8_t cmd, uint8_t numParam) {
+void sendCmd(uint8_t cmd, uint8_t numParam) {
   // Send SPI START CMD
   spiTransfer(START_CMD);
 
@@ -464,8 +471,7 @@ void SpiDrv::sendCmd(uint8_t cmd, uint8_t numParam) {
     spiTransfer(END_CMD);
 }
 
-int SpiDrv::available() {
+int available() {
   return (digitalRead(NINA_GPIOIRQ) != LOW);
 }
-
-SpiDrv spiDrv;
+}
